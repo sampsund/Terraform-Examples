@@ -108,7 +108,7 @@ resource "azurerm_linux_virtual_machine" "ise_32_vm" {
 
   admin_ssh_key {
     username   = "iseadmin"
-    public_key = file("/Users/sampathsundararajan/.ssh/id_rsa.pem.pub")
+    public_key = file("/Users/xyz/.ssh/id_rsa.pem.pub")
   }
 
   os_disk {
