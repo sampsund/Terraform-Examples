@@ -116,9 +116,3 @@ resource "azurerm_linux_virtual_machine" "ise_32_vm" {
     storage_account_type = "Standard_LRS"
   }
 }
-
-
-
-
-
-
