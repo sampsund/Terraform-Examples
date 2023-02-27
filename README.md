@@ -1,3 +1,5 @@
+Work in Progress...
+
 ## Provision of Ubuntu Linux VM on Azure
 #### The terraform file cl-linuxvm.tf provisions Ubuntu Linux vm. The following are created as part of the Ubuntu provisioning process.
   * Create a Resource Group "cl_resource_group"
