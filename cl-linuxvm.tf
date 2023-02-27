@@ -181,17 +181,17 @@ resource "azurerm_virtual_machine" "linuxvm" {
   }
 
   provisioner "file" {
-    source      = "/Users/sampathsundararajan/Office/SampSund/Terraform Projects/Azure Projects/isemulti/CiscoISE3.2-2nodes.tf"
+    source      = "/Users/CiscoISE3.2-2nodes.tf"
     destination = "/home/azadmin/CiscoISE3.2-2nodes.tf"
   }
 
   provisioner "file" {
-    source      = "/Users/sampathsundararajan/.ssh/cl_rsa.pub"
+    source      = "/Users/.ssh/cl_rsa.pub"
     destination = "/home/azadmin/cl_rsa.pub"
   }
 
   provisioner "file" {
-    source      = "/Users/sampathsundararajan/.ssh/cl_rsa"
+    source      = "/Users/.ssh/cl_rsa"
     destination = "/home/azadmin/cl_rsa"
   }
 
