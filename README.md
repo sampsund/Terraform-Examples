@@ -18,10 +18,11 @@ Work in Progress...
   * Create Ubuntu Virtual Machine
 ----------
 ## Provision of Cisco ISE - 2 Nodes on Azure
-#### The Terraform file "CiscoISE32-2nodes.tf" provisions Cisco Identity Services Engine (ISE) 3.2. The following are performed as part of the ISE provisioning process.
+#### The Terraform file "CiscoISE32-2nodes.tf" provisions Cisco Identity Services Engine (ISE) 3.2. The following are created as part of the ISE provisioning process.
 
 ----------
-- Execute Ansible script to Make the node as Primary and register the secondary node
-
-
+## Ansible Playbook
+#### The following Ansible playbook performs the following tasks.
+* Make Stanalone node to Primary node
+* Register Secondary node to Primary
 ----------
