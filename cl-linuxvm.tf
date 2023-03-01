@@ -51,7 +51,7 @@ resource "azurerm_network_security_group" "linux_network_security_group" {
   }
 }
 
-#Create Network Interface
+#Create NIC
 resource "azurerm_network_interface" "cl_linuxvm_nic" {
   name                = "cl_linuxvm_nic"
   location            = var.resource_group_location
@@ -60,17 +60,18 @@ resource "azurerm_network_interface" "cl_linuxvm_nic" {
   ip_configuration {
     name                          = "cl_linuxvm_nic"
     subnet_id                     = azurerm_subnet.cl_subnet.id
-    private_ip_address_allocation = "Dynamic"
+    private_ip_address_allocation = "Static"
+    private_ip_address            = "10.0.10.4"
     public_ip_address_id          = azurerm_public_ip.cl_linuxvm_pub_ip.id
   }
 }
 
-# Associate Network Security Group to Network Interface
+# Map Network Security Group to Network Interface
 resource "azurerm_network_interface_security_group_association" "ise_nsg_nic" {
   network_interface_id      = azurerm_network_interface.cl_linuxvm_nic.id
   network_security_group_id = azurerm_network_security_group.linux_network_security_group.id
-
 }
+
 # Create Private DNS Zone - Forward
 resource "azurerm_private_dns_zone" "cldns" {
   name                = "cl.test"
@@ -78,6 +79,7 @@ resource "azurerm_private_dns_zone" "cldns" {
   tags                = var.tags
 
 }
+
 # Create A record in Private DNS Zone - Forward
 resource "azurerm_private_dns_a_record" "cldns_linux_a_record" {
   name                = "cl-linuxvm"
@@ -88,6 +90,7 @@ resource "azurerm_private_dns_a_record" "cldns_linux_a_record" {
   tags                = var.tags
 
 }
+
 # Linking Virtual Network and Private DNS Zone - Forward
 resource "azurerm_private_dns_zone_virtual_network_link" "private_dns_virtual_network_link" {
   name                  = "private_dns_virtual_network_link"
@@ -120,39 +123,21 @@ resource "azurerm_private_dns_zone_virtual_network_link" "private_reverse_dns_vi
   resource_group_name   = azurerm_resource_group.cl_resource_group.name
   private_dns_zone_name = azurerm_private_dns_zone.private_reverse_dns.name
   virtual_network_id    = azurerm_virtual_network.cl_virtual_network.id
-
 }
 
 # Create new ISE Virtual Machine
-resource "azurerm_virtual_machine" "linuxvm" {
-  name                  = "cl-linuxvm"
-  location              = var.resource_group_location
-  resource_group_name   = azurerm_resource_group.cl_resource_group.name
-  network_interface_ids = [azurerm_network_interface.cl_linuxvm_nic.id]
-  vm_size               = "Standard_ds1_v2"
-  tags                  = var.tags
-  depends_on            = [azurerm_public_ip.cl_linuxvm_pub_ip]
-
-
-  storage_image_reference {
-    publisher = "Canonical"
-    offer     = "0001-com-ubuntu-server-jammy-daily"
-    sku       = "22_04-daily-lts"
-    version   = "latest"
-  }
-  storage_os_disk {
-    name              = "linuxvmdisk"
-    caching           = "ReadWrite"
-    create_option     = "FromImage"
-    managed_disk_type = "Standard_LRS"
-
-  }
-
-  os_profile {
-    computer_name  = "cl-linuxvm"
-    admin_username = var.admin_username
-    admin_password = var.admin_password
-    custom_data    = <<-EOT
+resource "azurerm_linux_virtual_machine" "linuxvm" {
+  name                            = "cl-linuxvm"
+  location                        = var.resource_group_location
+  resource_group_name             = azurerm_resource_group.cl_resource_group.name
+  network_interface_ids           = [azurerm_network_interface.cl_linuxvm_nic.id]
+  size                            = "Standard_B1s"
+  computer_name                   = "cl-linuxvm"
+  admin_username                  = var.admin_username
+  admin_password                  = var.admin_password
+  disable_password_authentication = false
+  tags                            = var.tags
+  user_data = base64encode(<<-EOT
         #!/bin/bash
         sudo apt install net-tools   
         sudo apt install unzip
@@ -170,29 +155,24 @@ resource "azurerm_virtual_machine" "linuxvm" {
         sudo bash -c "echo '127.0.0.1 cl-linuxvm' >> /etc/hosts"
         sudo bash -c "echo 'nameserver 168.63.129.16' >> /etc/resolv.conf" 
   EOT
+  )
+
+  source_image_reference {
+    publisher = "Canonical"
+    offer     = "0001-com-ubuntu-server-jammy-daily"
+    sku       = "22_04-daily-lts"
+    version   = "latest"
+  }
+  os_disk {
+    name                 = "linuxvmdisk"
+    caching              = "ReadWrite"
+    storage_account_type = "Standard_LRS"
+
   }
 
-  os_profile_linux_config {
-    disable_password_authentication = false
-    ssh_keys {
-      key_data = file("~/.ssh/cl_rsa.pub")
-      path     = "/home/azadmin/.ssh/authorized_keys"
-    }
-  }
-
-  provisioner "file" {
-    source      = "/Users/CiscoISE3.2-2nodes.tf"
-    destination = "/home/azadmin/CiscoISE3.2-2nodes.tf"
-  }
-
-  provisioner "file" {
-    source      = "/Users/.ssh/cl_rsa.pub"
-    destination = "/home/azadmin/cl_rsa.pub"
-  }
-
-  provisioner "file" {
-    source      = "/Users/.ssh/cl_rsa"
-    destination = "/home/azadmin/cl_rsa"
+  admin_ssh_key {
+    username   = "azadmin"
+    public_key = file("~/.ssh/cl_rsa.pub")
   }
 
   connection {
@@ -200,6 +180,22 @@ resource "azurerm_virtual_machine" "linuxvm" {
     host     = azurerm_public_ip.cl_linuxvm_pub_ip.ip_address
     user     = var.admin_username
     password = var.admin_password
+    #private_key = file("/Users/sampathsundararajan/.ssh/cl_rsa")
     agent    = false
+  }
+
+  provisioner "file" {
+    source      = "/Users/sampathsundararajan/Office/SampSund/Terraform Projects/Azure Projects/isemulti/CiscoISE3.2-2nodes.tf"
+    destination = "/home/azadmin/CiscoISE3.2-2nodes.tf"
+  }
+
+  provisioner "file" {
+    source      = "/Users/sampathsundararajan/.ssh/cl_rsa.pub"
+    destination = "/home/azadmin/cl_rsa.pub"
+  }
+
+  provisioner "file" {
+    source      = "/Users/sampathsundararajan/.ssh/cl_rsa"
+    destination = "/home/azadmin/cl_rsa"
   }
 }
