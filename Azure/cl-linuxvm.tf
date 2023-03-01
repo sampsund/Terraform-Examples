@@ -180,22 +180,21 @@ resource "azurerm_linux_virtual_machine" "linuxvm" {
     host     = azurerm_public_ip.cl_linuxvm_pub_ip.ip_address
     user     = var.admin_username
     password = var.admin_password
-    #private_key = file("/Users/sampathsundararajan/.ssh/cl_rsa")
     agent    = false
   }
 
   provisioner "file" {
-    source      = "/Users/sampathsundararajan/Office/SampSund/Terraform Projects/Azure Projects/isemulti/CiscoISE3.2-2nodes.tf"
+    source      = "/Users/CiscoISE3.2-2nodes.tf"
     destination = "/home/azadmin/CiscoISE3.2-2nodes.tf"
   }
 
   provisioner "file" {
-    source      = "/Users/sampathsundararajan/.ssh/cl_rsa.pub"
+    source      = "/Users/.ssh/cl_rsa.pub"
     destination = "/home/azadmin/cl_rsa.pub"
   }
 
   provisioner "file" {
-    source      = "/Users/sampathsundararajan/.ssh/cl_rsa"
+    source      = "/Users/.ssh/cl_rsa"
     destination = "/home/azadmin/cl_rsa"
   }
 }
