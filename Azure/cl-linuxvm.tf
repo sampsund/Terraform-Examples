@@ -1,4 +1,5 @@
-#Create the resource group
+# Create the resource group
+# Resource group name, Resource group location and tags are declated as variables in variables.tf file
 resource "azurerm_resource_group" "cl_resource_group" {
   name     = var.resource_group_name
   location = var.resource_group_location
@@ -135,6 +136,7 @@ resource "azurerm_linux_virtual_machine" "linuxvm" {
   computer_name                   = "cl-linuxvm"
   admin_username                  = var.admin_username
   admin_password                  = var.admin_password
+  zone                            = "1"
   disable_password_authentication = false
   tags                            = var.tags
   user_data = base64encode(<<-EOT
@@ -169,7 +171,7 @@ resource "azurerm_linux_virtual_machine" "linuxvm" {
     storage_account_type = "Standard_LRS"
 
   }
-
+# This parameter is used to enable SSH access to the Linux VM for Admin purposes.
   admin_ssh_key {
     username   = "azadmin"
     public_key = file("~/.ssh/cl_rsa.pub")
@@ -180,11 +182,11 @@ resource "azurerm_linux_virtual_machine" "linuxvm" {
     host     = azurerm_public_ip.cl_linuxvm_pub_ip.ip_address
     user     = var.admin_username
     password = var.admin_password
-    agent    = false
+    agent = false
   }
 
   provisioner "file" {
-    source      = "/Users/CiscoISE3.2-2nodes.tf"
+    source      = "/Users/isemulti/CiscoISE3.2-2nodes.tf"
     destination = "/home/azadmin/CiscoISE3.2-2nodes.tf"
   }
 
@@ -196,5 +198,22 @@ resource "azurerm_linux_virtual_machine" "linuxvm" {
   provisioner "file" {
     source      = "/Users/.ssh/cl_rsa"
     destination = "/home/azadmin/cl_rsa"
+  }
+# This copies the hosts file which contains the ISE node details for executing Ansible playbook
+  provisioner "file" {
+    source      = "/Users/hosts"
+    destination = "/home/azadmin/hosts"
+  }
+# This copies the inventory file which contains the ISE node details for executing Ansible playbook
+  provisioner "file" {
+    source      = "/Users/inventory.yaml"
+    destination = "/home/azadmin/inventory.yaml"
+  }
+  # This copies the main Ansible playbook for the following tasks
+  # Task1: Make standalone ISE node to Primary 
+  # Task2: Register secondary ISE node to Primary
+  provisioner "file" {
+    source      = "/Users/ise.yaml"
+    destination = "/home/azadmin/ise.yaml"
   }
 }
