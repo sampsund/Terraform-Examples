@@ -136,7 +136,6 @@ resource "azurerm_linux_virtual_machine" "linuxvm" {
   computer_name                   = "cl-linuxvm"
   admin_username                  = var.admin_username
   admin_password                  = var.admin_password
-  zone                            = "1"
   disable_password_authentication = false
   tags                            = var.tags
   user_data = base64encode(<<-EOT
